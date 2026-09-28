@@ -1,1 +1,38 @@
-[]
+[
+    {
+        "id": 1,
+        "nama": "Arsyi",
+        "nim": "2023020228",
+        "mata_kuliah": "Pemrograman Web",
+        "nilai": 88,
+        "keterangan": "Lulus",
+        "grade": "A"
+    },
+    {
+        "id": 2,
+        "nama": "Zalya",
+        "nim": "2023020227",
+        "mata_kuliah": "Pemrograman Web",
+        "nilai": 44,
+        "keterangan": "Tidak Lulus",
+        "grade": "E"
+    },
+    {
+        "id": 3,
+        "nama": "Aini",
+        "nim": "20230228",
+        "mata_kuliah": "Pemrograman Web",
+        "nilai": 44,
+        "keterangan": "Tidak Lulus",
+        "grade": "E"
+    },
+    {
+        "id": 4,
+        "nama": "Annisa",
+        "nim": "20230227",
+        "mata_kuliah": "Pemrograman Web",
+        "nilai": 33,
+        "keterangan": "Tidak Lulus",
+        "grade": "E"
+    }
+]

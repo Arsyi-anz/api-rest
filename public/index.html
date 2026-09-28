@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Manajemen Nilai</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin-bottom: 20px; max-width: 300px; }
+        input, select, button { display: block; width: 100%; margin: 8px 0; padding: 8px; }
+    </style>
+</head>
+<body>
+
+    <h2>Form Input Nilai</h2>
+    <!-- FORM INPUT -->
+    <form id="formNilai">
+        <input type="text" id="nim" placeholder="NIM (8 Angka)" required>
+        <input type="number" id="nilai" placeholder="Nilai Angka" required>
+        <select id="keterangan">
+            <option value="Lulus">Lulus</option>
+            <option value="Tidak Lulus">Tidak Lulus</option>
+        </select>
+        <button type="submit">Simpan Data</button>
+    </form>
+
+    <h2>Daftar Nilai</h2>
+    <!-- TABEL UNTUK MENAMPILKAN DATA -->
+    <table>
+        <thead>
+            <tr>
+                <th>Nama</th>
+                <th>NIM</th>
+                <th>Nilai</th>
+                <th>Grade</th>
+                <th>Keterangan</th>
+            </tr>
+        </thead>
+        <tbody id="tabelBody">
+            <!-- Data dari Fetch API akan muncul di sini secara otomatis -->
+        </tbody>
+    </table>
+
+    <script>
+        // 1. FUNGSI UNTUK MENAMPILKAN DATA (FETCH GET)
+        function muatData() {
+            fetch('/api/nilai') // Memanggil endpoint API Anda
+                .then(response => response.json())
+                .then(res => {
+                    const tbody = document.getElementById('tabelBody');
+                    tbody.innerHTML = ''; // Kosongkan tabel dulu sebelum diisi
+
+                    // Looping data dari API dan masukkan ke baris tabel
+                    res.data.forEach(item => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${item.nama}</td>
+                                <td>${item.nim}</td>
+                                <td>${item.nilai}</td>
+                                <td>${item.grade}</td>
+                                <td>${item.keterangan}</td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(err => console.error("Gagal mengambil data:", err));
+        }
+
+        // 2. FUNGSI UNTUK MENGIRIM DATA (FETCH POST)
+        document.getElementById('formNilai').addEventListener('submit', function(e) {
+            e.preventDefault(); // Mencegah halaman reload saat form di-submit
+
+            const dataInput = {
+                nim: document.getElementById('nim').value,
+                nilai: document.getElementById('nilai').value,
+                keterangan: document.getElementById('keterangan').value
+            };
+
+            fetch('/api/nilai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataInput) // Ubah data objek ke string JSON
+            })
+            .then(response => response.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    alert('Data berhasil disimpan!');
+                    document.getElementById('formNilai').reset(); // Kosongkan form kembali
+                    muatData(); // Refresh isi tabel agar data baru langsung muncul
+                }
+            })
+            .catch(err => console.error("Gagal mengirim data:", err));
+        });
+
+        // Jalankan fungsi muat data pertama kali saat halaman dibuka
+        muatData();
+    </script>
+</body>
+</html>

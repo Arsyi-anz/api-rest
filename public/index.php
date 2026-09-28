@@ -37,6 +37,18 @@ function tentukanKeterangan(float $nilai): string
     return $nilai >= 60 ? 'Lulus' : 'Tidak Lulus';
 }
 
+// Petakan nilai numerik ke grade huruf
+function hitungGrade(float $nilai): string
+{
+    return match (true) {
+        $nilai >= 85 => 'A',
+        $nilai >= 75 => 'B',
+        $nilai >= 65 => 'C',
+        $nilai >= 55 => 'D',
+        default      => 'E',
+    };
+}
+
 // ---------- Routing ----------
 $method = $_SERVER['REQUEST_METHOD'];
 $path   = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
@@ -45,9 +57,39 @@ if ($path !== '/api/nilai') {
     kirim(404, ['status' => 'error', 'pesan' => 'Endpoint tidak ditemukan']);
 }
 
-// ---------- GET /api/nilai ----------
+// ---------- GET /api/nilai dan GET /api/nilai?id={id} ----------
 if ($method === 'GET') {
     $data = bacaData();
+
+    // Cari satu data bila parameter 'id' dikirim
+    if (isset($_GET['id'])) {
+        $id = $_GET['id'];
+        $item = array_values(array_filter($data, fn($i) => ($i['id'] ?? null) == $id));
+
+        if (empty($item)) {
+            kirim(404, [
+                'status'  => 'error',
+                'message' => 'Data tidak ditemukan',
+            ]);
+        }
+
+        $satu = $item[0];
+        $satu['grade'] = hitungGrade((float) ($satu['nilai'] ?? 0));
+
+        kirim(200, ['status' => 'success', 'data' => $satu]);
+    }
+
+    // Petakan (map) data untuk menambahkan properti 'grade' di samping 'keterangan'
+    $data = array_map(function($item) {
+        $item['grade'] = hitungGrade((float) ($item['nilai'] ?? 0));
+        return $item;
+    }, $data);
+
+    // Filter opsional berdasarkan keterangan (Lulus / Tidak Lulus)
+    if (!empty($_GET['keterangan'])) {
+        $data = array_values(array_filter($data, fn($i) => ($i['keterangan'] ?? '') === $_GET['keterangan']));
+    }
+
     kirim(200, [
         'status' => 'success',
         'total'  => count($data),
@@ -66,10 +108,14 @@ if ($method === 'POST') {
     $nama = trim($input['nama'] ?? '');
     $mk   = trim($input['mata_kuliah'] ?? '');
     $nilai = $input['nilai'] ?? null;
+    $nim  = trim((string) ($input['nim'] ?? ''));
 
     $error = [];
     if ($nama === '') $error[] = 'nama wajib diisi';
     if ($mk === '')   $error[] = 'mata_kuliah wajib diisi';
+    if ($nim === '' || !ctype_digit($nim) || strlen($nim) !== 8) {
+        $error[] = 'nim wajib diisi, hanya angka, dan tepat 8 digit';
+    }
     if (!is_numeric($nilai) || $nilai < 0 || $nilai > 100) {
         $error[] = 'nilai harus angka 0 sampai 100';
     }
@@ -86,9 +132,11 @@ if ($method === 'POST') {
     $baru = [
         'id'          => $idBaru,
         'nama'        => $nama,
+        'nim'         => $nim,
         'mata_kuliah' => $mk,
         'nilai'       => $nilai + 0,
         'keterangan'  => tentukanKeterangan((float) $nilai),
+        'grade'       => hitungGrade((float) $nilai),
     ];
 
     $data[] = $baru;
