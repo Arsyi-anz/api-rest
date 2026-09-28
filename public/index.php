@@ -1,7 +1,22 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
-const FILE_DATA = __DIR__ . '/../data/nilai.json';
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+// Lokasi penyimpanan file JSON (prioritaskan folder public/data)
+if (file_exists(__DIR__ . '/data/nilai.json')) {
+    define('FILE_DATA', __DIR__ . '/data/nilai.json');
+} elseif (file_exists(__DIR__ . '/../data/nilai.json')) {
+    define('FILE_DATA', __DIR__ . '/../data/nilai.json');
+} else {
+    define('FILE_DATA', __DIR__ . '/data/nilai.json');
+}
 
 // Kirim response JSON lalu hentikan program
 function kirim(int $status, array $body): void
@@ -24,6 +39,10 @@ function bacaData(): array
 // Tulis array PHP ke file JSON (LOCK_EX mencegah tabrakan tulis)
 function simpanData(array $data): void
 {
+    $dir = dirname(FILE_DATA);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
     file_put_contents(
         FILE_DATA,
         json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
@@ -50,10 +69,14 @@ function hitungGrade(float $nilai): string
 }
 
 // ---------- Routing ----------
-$method = $_SERVER['REQUEST_METHOD'];
-$path   = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$uri    = $_SERVER['REQUEST_URI'] ?? '/api/nilai';
+$path   = rtrim(parse_url($uri, PHP_URL_PATH), '/');
 
-if ($path !== '/api/nilai') {
+// Izinkan /api/nilai, serta root / dan /index.php agar mudah diakses langsung di browser
+$isApiNilai = ($path === '/api/nilai' || $path === '' || $path === '/index.php');
+
+if (!$isApiNilai) {
     kirim(404, ['status' => 'error', 'pesan' => 'Endpoint tidak ditemukan']);
 }
 
