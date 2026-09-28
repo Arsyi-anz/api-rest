@@ -1,0 +1,8 @@
+{
+    "name": "app/api-nilai",
+    "description": "REST API Nilai Sederhana dengan PHP Native",
+    "type": "project",
+    "require": {
+        "php": ">=8.2"
+    }
+}
